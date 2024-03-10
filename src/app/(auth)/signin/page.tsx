@@ -14,7 +14,7 @@ export default async function SignInPage() {
   console.log('User', user)
   console.log('Session', session)
 
-  if (user) redirect('/')
+  // if (user) redirect('/')
 
   return <SignIn />
 }

@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { prisma } from '../prisma'
 import { lucia } from './index'
 
+// import {} from "arctic"
+
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email'),
   password: z.string().min(4, 'Provide your password.').max(255),
@@ -70,29 +72,24 @@ export async function signUp(_: any, formData: FormData): Promise<any> {
   }
   const { email, password } = parsed.data
   const existingUser = await prisma.user.findFirst({ where: { email: email } })
-  if (!existingUser) {
+  console.log(existingUser)
+  if (existingUser) {
+    console.log('HEaDADA')
     return {
       formError: 'Cannot create account with that email',
     }
   }
-  try {
-    const userId = generateId(21)
-    const hashedPassword = await new Scrypt().hash(password)
-    const newUser = await prisma.user.create({
-      data: { id: userId, email: email, hashedPassword: hashedPassword },
-    })
+  const userId = generateId(21)
+  const hashedPassword = await new Scrypt().hash(password)
+  await prisma.user.create({
+    data: { id: userId, email: email, hashedPassword: hashedPassword },
+  })
 
-    if (!newUser) return redirect('/')
+  const session = await lucia.createSession(userId, {})
+  const sessionCookie = lucia.createSessionCookie(session.id)
+  console.log('SESSION', session)
+  console.log('SESSIONCOOKIE', sessionCookie)
+  cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
 
-    const session = await lucia.createSession(userId, {})
-    const sessionCookie = lucia.createSessionCookie(session.id)
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
-
-    return redirect('/')
-  } catch (error) {
-    console.log('authErr', error)
-    return {
-      formError: 'Cannot create account try again',
-    }
-  }
+  redirect('/')
 }

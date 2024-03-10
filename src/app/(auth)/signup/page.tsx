@@ -12,7 +12,7 @@ export const metadata = {
 export default async function SignupPage() {
   const { user } = await validateRequest();
 
-  if (user) redirect("/");
+  // if (user) redirect("/");
 
   return <Signup />;
 }
